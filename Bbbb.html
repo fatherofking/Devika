@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secure Drag & Drop Zones</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .controls {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 500px;
+      margin: 0 auto 30px auto;
+    }
+
+    .drop-zones {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .drop-zone {
+      border: 2px dashed #aaa;
+      border-radius: 10px;
+      background: white;
+      padding: 10px;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .drop-zone.over {
+      background-color: #e0f7fa;
+    }
+
+    .content-block {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 5px;
+      background: #fff;
+      cursor: grab;
+    }
+
+    img, video {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 6px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 60px;
+    }
+
+    a.pdf-link {
+      display: block;
+      color: #007acc;
+      text-decoration: underline;
+      word-break: break-word;
+    }
+
+    #adminLogin {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .controls {
+        padding: 0 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Secure Drag & Drop Zones</h1>
+
+  <div id="adminLogin">
+    <input type="password" id="adminPassword" placeholder="Enter admin password..." />
+    <button onclick="checkPassword()">Login</button>
+  </div>
+
+  <div class="controls" id="editorControls">
+    <input type="file" id="fileInput" accept="image/*,video/*,application/pdf" />
+    <textarea id="textInput" placeholder="Enter text to add..."></textarea>
+    <button id="addTextBtn">Add Text</button>
+  </div>
+
+  <div class="drop-zones">
+    <div class="drop-zone" id="zone1"><strong>Zone 1</strong></div>
+    <div class="drop-zone" id="zone2"><strong>Zone 2</strong></div>
+    <div class="drop-zone" id="zone3"><strong>Zone 3</strong></div>
+    <div class="drop-zone" id="zone4"><strong>Zone 4</strong></div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const textInput = document.getElementById("textInput");
+    const addTextBtn = document.getElementById("addTextBtn");
+    const zones = document.querySelectorAll(".drop-zone");
+    const editorControls = document.getElementById("editorControls");
+
+    let uniqueId = 0;
+
+    function makeDraggable(el) {
+      el.draggable = true;
+      el.classList.add("content-block");
+      el.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", el.id);
+      });
+    }
+
+    function handleDropZone(zone) {
+      zone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        zone.classList.add("over");
+      });
+
+      zone.addEventListener("dragleave", () => {
+        zone.classList.remove("over");
+      });
+
+      zone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        zone.classList.remove("over");
+        const id = e.dataTransfer.getData("text/plain");
+        const element = document.getElementById(id);
+        if (element) zone.appendChild(element);
+      });
+    }
+
+    zones.forEach(zone => handleDropZone(zone));
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const wrapper = document.createElement("div");
+        wrapper.id = "item-" + uniqueId++;
+        makeDraggable(wrapper);
+
+        if (file.type.startsWith("image/")) {
+          const img = document.createElement("img");
+          img.src = event.target.result;
+          wrapper.appendChild(img);
+        } else if (file.type.startsWith("video/")) {
+          const video = document.createElement("video");
+          video.src = event.target.result;
+          video.controls = true;
+          wrapper.appendChild(video);
+        } else if (file.type === "application/pdf") {
+          const link = document.createElement("a");
+          link.href = event.target.result;
+          link.textContent = file.name;
+          link.target = "_blank";
+          link.className = "pdf-link";
+          wrapper.appendChild(link);
+        }
+
+        document.getElementById("zone1").appendChild(wrapper);
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    addTextBtn.addEventListener("click", () => {
+      const text = textInput.value.trim();
+      if (text === "") return;
+
+      const wrapper = document.createElement("div");
+      wrapper.id = "item-" + uniqueId++;
+      makeDraggable(wrapper);
+      wrapper.textContent = text;
+      document.getElementById("zone1").appendChild(wrapper);
+      textInput.value = "";
+    });
+
+    function checkPassword() {
+      const password = document.getElementById("adminPassword").value;
+      const correctPassword = "yourpassword"; // <- CHANGE THIS
+      if (password === correctPassword) {
+        editorControls.style.display = "flex";
+        document.getElementById("adminLogin").style.display = "none";
+      } else {
+        alert("Incorrect password.");
+      }
+    }
+  </script>
+
+</body>
+</html>

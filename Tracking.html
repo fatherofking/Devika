@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Orders - Your Store</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amazon+Ember:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Global CSS (duplicated for single file) */
+        body {
+            font-family: 'Amazon Ember', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #111;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            scroll-behavior: smooth;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .header {
+            background-color: #fff;
+            padding: 10px 20px;
+            border-bottom: 1px solid #e7e7e7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,.08);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007185;
+            text-decoration: none;
+        }
+        .header .nav-links a {
+            color: #007185;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 15px;
+        }
+        .header .nav-links a:hover {
+            text-decoration: underline;
+        }
+        .header .security-info {
+            display: flex;
+            align-items: center;
+            color: #565959;
+            font-size: 14px;
+        }
+        .header .security-info .lock-icon {
+            margin-right: 5px;
+            font-size: 16px;
+        }
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 15px;
+            }
+            .header .nav-links {
+                margin-top: 10px;
+                width: 100%;
+                display: flex;
+                justify-content: space-around;
+            }
+            .header .nav-links a {
+                margin: 0 5px;
+            }
+            .header .security-info {
+                margin-top: 10px;
+                align-self: flex-end;
+            }
+        }
+
+        .section-card {
+            background-color: #fff;
+            border: 1px solid #e7e7e7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,.08);
+        }
+        .section-card h1, .section-card h2 {
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #0f1111;
+        }
+        .section-card h2 {
+            font-size: 20px;
+        }
+
+        .btn-primary {
+            background-color: #FFD814;
+            color: #0F1111;
+            border: 1px solid #FCD200;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(242, 213, 76, 0.5);
+            transition: all 0.2s ease;
+            display: inline-block;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn-primary:hover {
+            background-color: #F7CA00;
+            border-color: #F2C200;
+        }
+        .btn-secondary {
+            background-color: #f7fafa;
+            color: #0f1111;
+            border: 1px solid #d5d9d9;
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn-secondary:hover {
+            background-color: #eff3f3;
+            border-color: #c8cccb;
+        }
+
+        .text-link {
+            color: #007185;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .text-link:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+            color: #565959;
+            border-top: 1px solid #e7e7e7;
+            margin-top: 40px;
+            background-color: #fff;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .footer a {
+            color: #007185;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .total-price {
+            font-size: 22px;
+            font-weight: bold;
+            color: #B12704;
+        }
+        .price-tag {
+            color: #B12704;
+            font-weight: bold;
+        }
+
+        /* Specific Styles for Cart/Order Items (reused where applicable) */
+        .cart-item, .order-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .cart-item:last-child, .order-item:last-child {
+            border-bottom: none;
+        }
+        .item-image {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            margin-right: 15px;
+            border: 1px solid #e7e7e7;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        .item-details {
+            flex-grow: 1;
+        }
+        .item-details h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            color: #007185;
+        }
+        .item-details h3 a {
+            text-decoration: none;
+            color: #007185;
+        }
+        .item-details h3 a:hover {
+            text-decoration: underline;
+        }
+        .item-details p {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: #565959;
+        }
+        .item-actions {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        .item-actions .quantity-selector {
+            display: flex;
+            align-items: center;
+            border: 1px solid #d5d9d9;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+        .item-actions .quantity-selector button {
+            background-color: #f0f2f5;
+            border: none;
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #111;
+        }
+        .item-actions .quantity-selector span {
+            padding: 0 10px;
+            border-left: 1px solid #d5d9d9;
+            border-right: 1px solid #d5d9d9;
+            font-weight: bold;
+        }
+        .item-actions .action-link {
+            color: #007185;
+            text-decoration: none;
+            margin-left: 10px;
+            padding-left: 10px;
+            border-left: 1px solid #d5d9d9;
+        }
+        .item-actions .action-link:first-of-type {
+            border-left: none;
+            padding-left: 0;
+        }
+        .item-actions .action-link:hover {
+            text-decoration: underline;
+        }
+
+
+        /* Page specific styles for order_tracking.html */
+        .order-filter {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .order-filter select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #d5d9d9;
+            font-size: 14px;
+            min-width: 150px;
+        }
+        .order-card {
+            background-color: #fff;
+            border: 1px solid #e7e7e7;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,.08);
+        }
+        .order-header {
+            background-color: #f0f2f5;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e7e7e7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .order-header-info {
+            font-size: 14px;
+            color: #565959;
+        }
+        .order-header-info div {
+            margin-bottom: 5px;
+        }
+        .order-header-info strong {
+            color: #111;
+            display: block;
+        }
+        .order-content {
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .order-status-section {
+            flex: 2;
+            min-width: 250px;
+        }
+        .order-status-section h3 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #0f1111;
+        }
+        .delivery-status {
+            font-size: 16px;
+            font-weight: bold;
+            color: #007185;
+            margin-bottom: 15px;
+        }
+        .delivery-date {
+            font-size: 20px;
+            font-weight: bold;
+            color: #B12704;
+            margin-bottom: 15px;
+        }
+        .tracking-link {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #007185;
+            text-decoration: none;
+        }
+        .tracking-link:hover {
+            text-decoration: underline;
+        }
+        .order-items-section-tracking {
+            flex: 1;
+            min-width: 250px;
+        }
+        .order-items-section-tracking h3 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #0f1111;
+        }
+        .order-items-section-tracking .order-item {
+            padding: 10px 0;
+        }
+        .order-action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .order-action-buttons .btn-secondary {
+            flex: 1 1 auto;
+            min-width: 120px;
+        }
+        @media (max-width: 768px) {
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .order-content {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="logo">YourStore</a>
+        <nav class="nav-links">
+            <a href="account.html">Your Account</a>
+            <a href="cart.html">Cart</a>
+            <a href="help.html">Help</a>
+        </nav>
+        <div class="security-info">
+            <span class="lock-icon">&#128274;</span> Your Orders
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="section-card">
+            <h1>Your Orders</h1>
+            <div class="order-filter">
+                <label for="order-timeframe">Filter by:</label>
+                <select id="order-timeframe">
+                    <option value="last30">Last 30 days</option>
+                    <option value="3months">Past 3 months</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="all">All orders</option>
+                </select>
+                <button class="btn-secondary">Search Orders</button>
+            </div>
+
+            <div class="order-card">
+                <div class="order-header">
+                    <div class="order-header-info">
+                        <div>Order Placed: <strong>July 7, 2025</strong></div>
+                        <div>Total: <strong class="price-tag">$67.48</strong></div>
+                    </div>
+                    <div class="order-header-info text-right">
+                        <div>Order #</div>
+                        <div><strong>123-4567890-1234567</strong></div>
+                    </div>
+                </div>
+                <div class="order-content">
+                    <div class="order-status-section">
+                        <p class="delivery-date">Delivered July 15, 2025</p>
+                        <p class="delivery-status">Your package was delivered.</p>
+                        <a href="#" class="tracking-link">View tracking details for this package</a>
+                        <div class="order-action-buttons">
+                            <button class="btn-primary">Buy it again</button>
+                            <button class="btn-secondary">Return or replace items</button>
+                            <button class="btn-secondary">Archive order</button>
+                        </div>
+                    </div>
+                    <div class="order-items-section-tracking">
+                        <div class="order-item">
+                            <img src="https://via.placeholder.com/60x60?text=Prod+A" alt="Product A" class="item-image">
+                            <div class="item-details">
+                                <h3><a href="#">Amazing Wireless Headphones - Noise Cancelling</a></h3>
+                                <p>Qty: 1</p>
+                                <p class="price-tag">$199.99</p>
+                            </div>
+                        </div>
+                        <div class="order-item">
+                            <img src="https://via.placeholder.com/60x60?text=Prod+C" alt="Product C" class="item-image">
+                            <div class="item-details">
+                                <h3><a href="#">Smart Home Hub with Voice Assistant</a></h3>
+                                <p>Qty: 2</p>
+                                <p class="price-tag">$89.50</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-card">
+                <div class="order-header">
+                    <div class="order-header-info">
+                        <div>Order Placed: <strong>June 20, 2025</strong></div>
+                        <div>Total: <strong class="price-tag">$349.00</strong></div>
+                    </div>
+                    <div class="order-header-info text-right">
+                        <div>Order #</div>
+                        <div><strong>987-6543210-9876543</strong></div>
+                    </div>
+                </div>
+                <div class="order-content">
+                    <div class="order-status-section">
+                        <p class="delivery-date">Arriving: Monday, July 8, 2025</p>
+                        <p class="delivery-status" style="color: #00A650;">Shipped!</p>
+                        <a href="#" class="tracking-link">Track package</a>
+                        <div class="order-action-buttons">
+                            <button class="btn-secondary">View order details</button>
+                            <button class="btn-secondary">Cancel items</button>
+                        </div>
+                    </div>
+                    <div class="order-items-section-tracking">
+                        <div class="order-item">
+                            <img src="https://via.placeholder.com/60x60?text=Prod+B" alt="Product B" class="item-image">
+                            <div class="item-details">
+                                <h3><a href="#">Ergonomic Office Chair - Lumbar Support</a></h3>
+                                <p>Qty: 1</p>
+                                <p class="price-tag">$349.00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 YourStore.com</p>
+        <p>
+            <a href="#">Conditions of Use</a>
+            <a href="#">Privacy Notice</a>
+            <a href="help.html">Help</a>
+        </p>
+    </footer>
+</body>
+</html>

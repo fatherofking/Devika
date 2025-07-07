@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Checkout - Your Store</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amazon+Ember:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Basic Reset & Body */
+        body {
+            font-family: 'Amazon Ember', Arial, sans-serif; /* Or a similar clean sans-serif */
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5; /* Light grey background */
+            color: #111; /* Amazon's dark text color */
+            line-height: 1.5;
+        }
+
+        /* Header */
+        .header {
+            background-color: #fff;
+            padding: 10px 20px;
+            border-bottom: 1px solid #e7e7e7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,.08);
+        }
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007185; /* Amazon's blue for links/logo */
+            text-decoration: none;
+        }
+        .header .security-info {
+            display: flex;
+            align-items: center;
+            color: #565959;
+            font-size: 14px;
+        }
+        .header .security-info .lock-icon { /* Placeholder for SVG icon */
+            margin-right: 5px;
+        }
+
+        /* Main Content Layout */
+        .checkout-container {
+            display: flex;
+            flex-wrap: wrap; /* Allows wrapping on smaller screens */
+            max-width: 1200px;
+            margin: 20px auto;
+            gap: 20px; /* Space between columns */
+            padding: 0 20px;
+        }
+        .main-content {
+            flex: 2; /* Takes more space */
+            min-width: 300px; /* Minimum width before wrapping */
+        }
+        .order-summary {
+            flex: 1; /* Takes less space */
+            min-width: 250px; /* Minimum width before wrapping */
+            background-color: #fff;
+            border: 1px solid #e7e7e7;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,.08);
+            position: sticky; /* Makes it stick when scrolling */
+            top: 20px; /* Distance from top */
+            align-self: flex-start; /* Aligns to the start of the flex container */
+        }
+
+        /* Section Styling */
+        .section {
+            background-color: #fff;
+            border: 1px solid #e7e7e7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,.08);
+        }
+        .section h2 {
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #0f1111; /* Darker heading color */
+        }
+
+        /* Forms & Inputs */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d5d9d9;
+            border-radius: 3px;
+            box-sizing: border-box; /* Include padding in width */
+            font-size: 16px;
+        }
+        .form-group input[type="text"]:focus,
+        .form-group input[type="email"]:focus,
+        .form-group input[type="tel"]:focus,
+        .form-group select:focus {
+            border-color: #e77600; /* Amazon's focus color */
+            box-shadow: 0 0 0 3px #f7c38e; /* Light orange glow */
+            outline: none;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .radio-option:hover {
+            border-color: #e77600;
+        }
+        .radio-option input[type="radio"] {
+            margin-right: 10px;
+        }
+        .radio-option strong {
+            display: block;
+        }
+        .radio-option span {
+            font-size: 14px;
+            color: #565959;
+        }
+
+        /* Order Summary Specifics */
+        .order-summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .order-summary-item.total {
+            font-size: 20px;
+            font-weight: bold;
+            color: #B12704; /* Amazon's total price color */
+            border-top: 1px solid #e7e7e7;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: #FFD814; /* Amazon's primary button color */
+            color: #0F1111;
+            border: 1px solid #FCD200;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(242, 213, 76, 0.5); /* Subtle shadow */
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover {
+            background-color: #F7CA00;
+            border-color: #F2C200;
+        }
+        .btn-secondary {
+            background-color: #f7fafa;
+            color: #0f1111;
+            border: 1px solid #d5d9d9;
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #eff3f3;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .checkout-container {
+                flex-direction: column;
+            }
+            .order-summary {
+                position: static; /* Remove sticky on small screens */
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="#" class="logo">YourStore</a>
+        <div class="security-info">
+            <span class="lock-icon">&#128274;</span> Secure Checkout
+        </div>
+    </header>
+
+    <div class="checkout-container">
+        <div class="main-content">
+            <div class="section">
+                <h2>1. Shipping Address</h2>
+                <div class="form-group">
+                    <label>Select a shipping address:</label>
+                    <div class="radio-option">
+                        <input type="radio" name="shipping-address" id="address1" checked>
+                        <div>
+                            <strong>John Doe</strong><br>
+                            123 Main St, Apt 4B<br>
+                            Anytown, CA 90210<br>
+                            United States<br>
+                            <span>Phone: (555) 123-4567</span>
+                        </div>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="shipping-address" id="address2">
+                        <div>
+                            <strong>Jane Smith</strong><br>
+                            456 Oak Ave<br>
+                            Sometown, NY 10001<br>
+                            United States
+                        </div>
+                    </div>
+                    <button class="btn-secondary" style="margin-top: 15px;">Add New Address</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>2. Payment Method</h2>
+                <div class="form-group">
+                    <label>Select a payment method:</label>
+                    <div class="radio-option">
+                        <input type="radio" name="payment-method" id="card1" checked>
+                        <div>
+                            <strong>Visa ending in **** 1234</strong><br>
+                            <span>Expires 10/26</span>
+                        </div>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="payment-method" id="paypal">
+                        <div>
+                            <strong>PayPal</strong><br>
+                            <span>example@email.com</span>
+                        </div>
+                    </div>
+                    <button class="btn-secondary" style="margin-top: 15px;">Add a new payment method</button>
+                </div>
+                <div style="margin-top: 20px;">
+                    <img src="https://via.placeholder.com/150x30?text=Accepted+Cards" alt="Accepted Payment Methods" style="max-width: 100%;">
+                    </div>
+            </div>
+
+            <div class="section">
+                <h2>3. Review items and shipping</h2>
+                <p>Items will be shipped together.</p>
+                <div style="display: flex; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    <img src="https://via.placeholder.com/80x80" alt="Product Image" style="margin-right: 15px;">
+                    <div>
+                        <strong>Product Name Example</strong><br>
+                        <span>Quantity: 1</span><br>
+                        <span>$29.99</span>
+                    </div>
+                </div>
+                 <div style="font-size: 14px; color: #007185; cursor: pointer;">
+                    &#9660; View more details (e.g., delivery date, seller)
+                </div>
+            </div>
+
+        </div>
+
+        <div class="order-summary">
+            <h2>Order Summary</h2>
+            <div class="order-summary-item">
+                <span>Items:</span>
+                <span>$59.98</span>
+            </div>
+            <div class="order-summary-item">
+                <span>Shipping & handling:</span>
+                <span>$5.00</span>
+            </div>
+            <div class="order-summary-item">
+                <span>Estimated tax:</span>
+                <span>$2.50</span>
+            </div>
+            <div class="order-summary-item total">
+                <span>Order total:</span>
+                <span>$67.48</span>
+            </div>
+            <div style="font-size: 13px; color: #565959; margin-top: 15px;">
+                By placing your order, you agree to YourStore's <a href="#" style="color: #007185;">privacy notice</a> and <a href="#" style="color: #007185;">conditions of use</a>.
+            </div>
+            <button class="btn-primary" style="margin-top: 20px;">Place Your Order</button>
+        </div>
+    </div>
+
+    <footer style="text-align: center; padding: 20px; font-size: 13px; color: #565959;">
+        &copy; 2025 YourStore.com
+        <p style="margin-top: 10px;">
+            <a href="#" style="color: #007185; margin: 0 10px;">Conditions of Use</a>
+            <a href="#" style="color: #007185; margin: 0 10px;">Privacy Notice</a>
+            <a href="#" style="color: #007185; margin: 0 10px;">Help</a>
+        </p>
+    </footer>
+</body>
+</html>

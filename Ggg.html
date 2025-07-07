@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Comment Section</title>
+    <script type="module">
+      // Import the functions you need from the SDKs you want to use
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+      import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+      import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
+
+      // Make Firebase instances globally available for the script below
+      window.firebaseApp = app;
+      window.db = db;
+      window.auth = auth;
+      window.collection = collection;
+      window.addDoc = addDoc;
+      window.serverTimestamp = serverTimestamp;
+      window.query = query;
+      window.orderBy = orderBy;
+      window.onSnapshot = onSnapshot;
+      window.onAuthStateChanged = onAuthStateChanged;
+
+      // You might want to handle initial auth state here or expose it differently
+      // For this example, we'll let the main script handle onAuthStateChanged
+    </script>
+
+    <style>
+        /* General Body Styles */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            line-height: 1.5;
+        }
+
+        /* Comment Section Container */
+        .comment-section {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            max-width: 650px;
+            margin: 30px auto;
+            padding: 25px;
+        }
+
+        /* Comment Form */
+        .comment-form {
+            display: flex;
+            align-items: flex-end; /* Align button to bottom of textarea */
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .comment-form .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 12px;
+            background-color: #ddd; /* Placeholder background */
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .comment-input-area {
+            flex-grow: 1; /* Take up remaining space */
+            position: relative;
+        }
+
+        .comment-input-area textarea {
+            width: 100%;
+            min-height: 40px; /* Initial height */
+            max-height: 200px; /* Prevent it from growing too large */
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 20px; /* More rounded like Instagram */
+            font-size: 15px;
+            line-height: 1.4;
+            resize: none; /* Disable manual resizing */
+            overflow-y: hidden; /* Hide scrollbar until needed */
+            box-sizing: border-box;
+            transition: all 0.2s ease-in-out;
+            padding-right: 60px; /* Space for the post button */
+        }
+
+        .comment-input-area textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .comment-submit-button {
+            background: none;
+            border: none;
+            color: #007bff;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 20px;
+            transition: background-color 0.2s ease;
+            position: absolute; /* Position relative to .comment-input-area */
+            right: 5px;
+            bottom: 5px;
+            z-index: 1; /* Ensure it's above textarea */
+        }
+
+        .comment-submit-button:hover:not(:disabled) {
+            background-color: #e6f2ff;
+        }
+
+        .comment-submit-button:disabled {
+            color: #a0a0a0;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #d9534f; /* Bootstrap red */
+            font-size: 0.85em;
+            margin-top: 5px;
+            margin-left: 52px; /* Align with text area content */
+            display: none; /* Hidden by default */
+        }
+
+        /* Comments List */
+        .comments-list {
+            /* No specific styles needed here, children will handle layout */
+        }
+
+        .comment-item {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+
+        .comment-item .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+            background-color: #ddd; /* Placeholder */
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex-grow: 1;
+            background-color: #f7f7f7;
+            border-radius: 18px; /* Softer edges */
+            padding: 10px 15px;
+            position: relative;
+        }
+
+        .comment-content .comment-header {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 5px;
+        }
+
+        .comment-content .comment-author {
+            font-weight: bold;
+            color: #333;
+            margin-right: 8px;
+            font-size: 0.95em;
+        }
+
+        .comment-content .comment-timestamp {
+            font-size: 0.75em;
+            color: #888;
+        }
+
+        .comment-text {
+            font-size: 0.95em;
+            word-wrap: break-word; /* Ensure long words break */
+        }
+
+        .comment-actions {
+            margin-top: 5px;
+            display: flex;
+            gap: 15px;
+            margin-left: 5px; /* Indent actions slightly */
+        }
+
+        .comment-action-button {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 0.8em;
+            cursor: pointer;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .comment-action-button:hover {
+            color: #333;
+        }
+
+        .comment-action-button.liked {
+            color: #e0245e; /* Instagram heart color */
+        }
+
+        /* Loading state */
+        .loading-comments {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+        }
+
+        /* Message for no comments */
+        .no-comments {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        /* For the current user's avatar in the form */
+        #commentFormUserAvatar {
+            border: 2px solid #007bff; /* Highlight current user */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="comment-section">
+        <div class="comment-form">
+            <img src="https://via.placeholder.com/40/007bff/ffffff?text=U" alt="Your Avatar" class="user-avatar" id="commentFormUserAvatar">
+            <div class="comment-input-area">
+                <div id="commentError" class="error-message"></div>
+                <textarea id="commentText" placeholder="Add a comment..." rows="1"></textarea>
+                <button type="submit" class="comment-submit-button" id="postCommentButton" disabled>Post</button>
+            </div>
+        </div>
+
+        <div class="comments-list" id="commentsContainer">
+            <div class="loading-comments" id="loadingComments">Loading comments...</div>
+            </div>
+    </div>
+
+    <script type="module">
+        // Import necessary Firebase functions (already imported in head for global access)
+        // You would typically import them directly here if not exposing globally.
+        const db = window.db;
+        const auth = window.auth;
+        const collection = window.collection;
+        const addDoc = window.addDoc;
+        const serverTimestamp = window.serverTimestamp;
+        const query = window.query;
+        const orderBy = window.orderBy;
+        const onSnapshot = window.onSnapshot;
+        const onAuthStateChanged = window.onAuthStateChanged;
+
+        // --- DOM Elements ---
+        const commentForm = document.getElementById('commentForm');
+        const commentText = document.getElementById('commentText');
+        const postCommentButton = document.getElementById('postCommentButton');
+        const commentsContainer = document.getElementById('commentsContainer');
+        const commentError = document.getElementById('commentError');
+        const commentFormUserAvatar = document.getElementById('commentFormUserAvatar');
+        const loadingCommentsDiv = document.getElementById('loadingComments');
+
+        // --- Global Variables (will be updated by Firebase Auth) ---
+        let currentUser = null; // Stores Firebase Auth user object
+
+        // --- Configuration ---
+        // IMPORTANT: In a real app, this would be the ID of the post/video the comments belong to.
+        const CURRENT_POST_ID = 'your_actual_post_or_video_id';
+
+        // --- Helper Functions ---
+
+        function showErrorMessage(message) {
+            commentError.textContent = message;
+            commentError.style.display = 'block';
+        }
+
+        function hideErrorMessage() {
+            commentError.style.display = 'none';
+            commentError.textContent = '';
+        }
+
+        /**
+         * Auto-resizes the textarea based on content.
+         * @param {HTMLTextAreaElement} textarea - The textarea element.
+         */
+        function autoResizeTextarea(textarea) {
+            textarea.style.height = 'auto'; // Reset height to recalculate
+            textarea.style.height = textarea.scrollHeight + 'px'; // Set to scroll height
+        }
+
+        /**
+         * Formats a Firebase timestamp or Date object into a readable string.
+         * @param {object | Date} timestamp - Firebase Timestamp object or a Date object.
+         * @returns {string} Formatted time ago string.
+         */
+        function formatTimeAgo(timestamp) {
+            let date;
+            if (timestamp && typeof timestamp.toDate === 'function') {
+                date = timestamp.toDate(); // Convert Firebase Timestamp to Date object
+            } else if (timestamp instanceof Date) {
+                date = timestamp;
+            } else if (typeof timestamp === 'string') {
+                date = new Date(timestamp); // Handle ISO string
+            } else {
+                return 'just now'; // Fallback
+            }
+
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            const months = Math.floor(days / 30);
+            const years = Math.floor(days / 365);
+
+            if (seconds < 60) return `${seconds}s ago`;
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 30) return `${days}d ago`;
+            if (months < 12) return `${months}mo ago`;
+            return `${years}y ago`;
+        }
+
+        /**
+         * Creates an HTML element for a single comment.
+         * @param {object} commentData - The comment object from Firestore.
+         * @returns {HTMLElement} The created comment div.
+         */
+        function createCommentElement(commentData) {
+            const commentItem = document.createElement('div');
+            commentItem.classList.add('comment-item');
+            commentItem.dataset.id = commentData.id; // Store Firestore document ID
+
+            const userAvatar = document.createElement('img');
+            userAvatar.classList.add('user-avatar');
+            userAvatar.src = commentData.userAvatar || `https://via.placeholder.com/36/cccccc/000000?text=${(commentData.username || 'U').charAt(0).toUpperCase()}`; // Default avatar
+            userAvatar.alt = `${commentData.username || 'Anonymous'}'s avatar`;
+
+            const commentContentDiv = document.createElement('div');
+            commentContentDiv.classList.add('comment-content');
+
+            const commentHeader = document.createElement('div');
+            commentHeader.classList.add('comment-header');
+
+            const authorSpan = document.createElement('span');
+            authorSpan.classList.add('comment-author');
+            authorSpan.textContent = commentData.username || 'Anonymous';
+
+            const timestampSpan = document.createElement('span');
+            timestampSpan.classList.add('comment-timestamp');
+            timestampSpan.textContent = formatTimeAgo(commentData.timestamp);
+
+            const contentPara = document.createElement('p');
+            contentPara.classList.add('comment-text');
+            contentPara.textContent = commentData.text;
+
+            const commentActionsDiv = document.createElement('div');
+            commentActionsDiv.classList.add('comment-actions');
+
+            // Like button (example, you'd add logic to toggle 'liked' class and update Firestore)
+            const likeButton = document.createElement('button');
+            likeButton.classList.add('comment-action-button');
+            likeButton.textContent = 'Like';
+            // Example: Add a click listener for liking
+            // likeButton.addEventListener('click', () => { handleLike(commentData.id, currentUser.uid) });
+
+            // Reply button (example, would open a nested reply form)
+            const replyButton = document.createElement('button');
+            replyButton.classList.add('comment-action-button');
+            replyButton.textContent = 'Reply';
+            // Example: Add a click listener for replying
+            // replyButton.addEventListener('click', () => { showReplyForm(commentData.id, commentData.username) });
+
+
+            commentHeader.appendChild(authorSpan);
+            commentHeader.appendChild(timestampSpan);
+
+            commentActionsDiv.appendChild(likeButton);
+            commentActionsDiv.appendChild(replyButton);
+
+            commentContentDiv.appendChild(commentHeader);
+            commentContentDiv.appendChild(contentPara);
+            commentContentDiv.appendChild(commentActionsDiv);
+
+            commentItem.appendChild(userAvatar);
+            commentItem.appendChild(commentContentDiv);
+
+            return commentItem;
+        }
+
+        /**
+         * Renders all comments into the container.
+         * @param {Array<object>} comments - An array of comment data objects.
+         */
+        function renderComments(comments) {
+            commentsContainer.innerHTML = ''; // Clear existing comments
+            if (comments.length === 0) {
+                commentsContainer.innerHTML = '<div class="no-comments">No comments yet. Be the first!</div>';
+            } else {
+                comments.forEach(comment => {
+                    commentsContainer.appendChild(createCommentElement(comment));
+                });
+            }
+        }
+
+        // --- Event Listeners ---
+
+        // Auto-resize textarea as user types
+        commentText.addEventListener('input', () => {
+            autoResizeTextarea(commentText);
+            // Enable/disable Post button based on content
+            postCommentButton.disabled = commentText.value.trim() === '';
+            hideErrorMessage(); // Hide error when user starts typing
+        });
+
+        // Handle comment submission
+        postCommentButton.addEventListener('click', async () => {
+            if (!currentUser) {
+                showErrorMessage('You must be logged in to post a comment.');
+                return;
+            }
+
+            const commentContent = commentText.value.trim();
+            if (!commentContent) {
+                showErrorMessage('Comment cannot be empty.');
+                return;
+            }
+
+            postCommentButton.disabled = true; // Disable button while submitting
+            postCommentButton.textContent = 'Posting...';
+
+            try {
+                // Here, you could send to your Flask/FastAPI backend first
+                // for server-side validation and complex logic, THEN your backend
+                // writes to Firestore. For simplicity and real-time focus, we'll
+                // write directly to Firestore using the client SDK.
+
+                await addDoc(collection(db, "comments"), {
+                    postId: CURRENT_POST_ID,
+                    userId: currentUser.uid,
+                    username: currentUser.displayName || 'Anonymous User', // Use user's display name
+                    userAvatar: currentUser.photoURL || null, // Use user's photo URL
+                    text: commentContent,
+                    timestamp: serverTimestamp() // Firebase server timestamp
+                });
+
+                commentText.value = ''; // Clear text area
+                autoResizeTextarea(commentText); // Reset textarea height
+                hideErrorMessage();
+                postCommentButton.textContent = 'Post'; // Reset button text
+                postCommentButton.disabled = true; // Disable again until new text
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                showErrorMessage('Failed to post comment. Please try again.');
+                postCommentButton.textContent = 'Post'; // Reset button text
+                postCommentButton.disabled = false; // Re-enable for retry
+            }
+        });
+
+        // --- Firebase Real-time Listener for Comments ---
+
+        // Listen for authentication state changes
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (currentUser) {
+                // Update form avatar and placeholder
+                commentFormUserAvatar.src = currentUser.photoURL || `https://via.placeholder.com/40/007bff/ffffff?text=${currentUser.displayName ? currentUser.displayName.charAt(0).toUpperCase() : 'U'}`;
+                commentFormUserAvatar.alt = `${currentUser.displayName || 'Current User'}'s avatar`;
+                commentText.placeholder = `Add a comment as ${currentUser.displayName || 'you'}...`;
+                postCommentButton.disabled = commentText.value.trim() === ''; // Enable if already typed
+            } else {
+                commentFormUserAvatar.src = "https://via.placeholder.com/40/dddddd/666666?text=U"; // Generic avatar
+                commentFormUserAvatar.alt = "Guest User";
+                commentText.placeholder = "Log in to add a comment...";
+                postCommentButton.disabled = true; // Disable if not logged in
+            }
+        });
+
+
+        // Setup real-time listener for comments for the current post
+        const q = query(collection(db, "comments"), orderBy("timestamp", "desc"));
+
+        onSnapshot(q, (snapshot) => {
+            loadingCommentsDiv.style.display = 'none'; // Hide loading message once data starts coming
+            const comments = [];
+            snapshot.forEach((doc) => {
+                comments.push({ id: doc.id, ...doc.data() });
+            });
+            renderComments(comments); // Re-render all comments
+        }, (error) => {
+            console.error("Error listening to comments:", error);
+            commentsContainer.innerHTML = '<div class="error-message" style="display: block; text-align: center;">Error loading comments.</div>';
+            loadingCommentsDiv.style.display = 'none';
+        });
+
+        // Initial setup for textarea
+        autoResizeTextarea(commentText);
+
+    </script>
+
+</body>
+</html>
