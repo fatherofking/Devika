@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Showcase Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* General Body Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8faff; /* Very light blue background for a fresh feel */
+            color: #333;
+            line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+
+        /* Container for overall content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: #ffffff;
+            padding: 15px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            flex-wrap: wrap; /* Allows nav items to wrap on smaller screens */
+        }
+
+        .logo {
+            font-size: 1.9em;
+            font-weight: 700;
+            color: #2a64ad; /* A strong blue for the logo */
+            margin-bottom: 10px; /* Space for search on small screens */
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            flex-grow: 1; /* Allows search bar to take available space */
+            max-width: 450px; /* Limit search bar width */
+            margin-left: 30px;
+        }
+
+        .search-container input[type="text"] {
+            width: 100%;
+            padding: 12px 20px;
+            border: 1px solid #d0e0f0; /* Softer border */
+            border-radius: 30px; /* More rounded */
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .search-container input[type="text"]::placeholder {
+            color: #9ab;
+        }
+
+        .search-container input[type="text"]:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15); /* Softer focus glow */
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #007bff, #0056b3); /* Gradient background */
+            color: #fff;
+            text-align: center;
+            padding: 100px 20px;
+            border-radius: 12px; /* Slightly more rounded */
+            margin-bottom: 50px;
+            margin-top: 20px; /* Space below header */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* Stronger shadow */
+        }
+
+        .hero h1 {
+            font-size: 3.2em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.2em;
+            max-width: 750px;
+            margin: 0 auto 30px auto;
+            opacity: 0.9;
+        }
+
+        .cta-button-hero {
+            display: inline-block;
+            background-color: #fff;
+            color: #007bff;
+            padding: 14px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .cta-button-hero:hover {
+            background-color: #e2eaf5;
+            color: #0056b3;
+            transform: translateY(-3px);
+        }
+
+        /* Items Grid */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+            gap: 35px; /* More space between items */
+            padding: 20px;
+        }
+
+        .item-card {
+            background-color: #ffffff;
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08); /* Soft shadow */
+            overflow: hidden; /* Ensures image corners are rounded */
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            padding-bottom: 60px; /* Space for the button */
+        }
+
+        .item-card:hover {
+            transform: translateY(-8px); /* More pronounced lift on hover */
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15); /* Stronger shadow on hover */
+        }
+
+        .item-card a {
+            text-decoration: none; /* Remove underline from image links */
+            color: inherit;
+            display: block; /* Make the entire image area clickable */
+        }
+
+        .item-card img {
+            width: 100%;
+            height: 200px; /* Consistent height for images */
+            object-fit: cover;
+            display: block;
+            border-bottom: 1px solid #f0f0f0; /* Lighter border */
+        }
+
+        .item-content {
+            padding: 20px;
+            position: relative;
+            text-align: left;
+            min-height: 120px; /* Ensure consistent card height for description */
+        }
+
+        .item-name {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .item-description {
+            font-size: 0.95em;
+            color: #666;
+            opacity: 0;
+            visibility: hidden;
+            max-height: 0;
+            overflow: hidden;
+            transition: opacity 0.3s ease-in-out, max-height 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            line-height: 1.5;
+        }
+
+        /* Hover effect for description */
+        .item-name:hover > .item-description { /* Targets direct child p */
+            opacity: 1;
+            visibility: visible;
+            max-height: 120px; /* Adjusted max height for potentially longer descriptions */
+            margin-bottom: 10px;
+        }
+
+        /* Create Now Button */
+        .create-button-wrapper {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            text-align: center;
+        }
+
+        .create-button {
+            display: block;
+            width: 100%;
+            background-color: #007bff;
+            color: #fff;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px; /* More rounded button */
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .create-button:hover {
+            background-color: #28a745; /* Turns green on hover */
+            transform: translateY(-3px); /* Slight lift */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .button-hover-description {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); /* Darker overlay for better readability */
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.88em;
+            text-align: center;
+            padding: 8px;
+            box-sizing: border-box;
+            opacity: 0;
+            transform: translateY(100%);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .create-button:hover .button-hover-description {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Footer Styles */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            background-color: #2c3e50;
+            color: #f4f7f6;
+            margin-top: 60px;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        footer p {
+            margin: 0;
+            font-size: 0.9em;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .search-container {
+                margin-left: 0;
+                margin-top: 15px;
+                width: 100%;
+                max-width: none;
+            }
+            .logo {
+                margin-bottom: 0;
+            }
+            .hero {
+                padding: 60px 20px;
+            }
+            .hero h1 {
+                font-size: 2.5em;
+            }
+            .hero p {
+                font-size: 1em;
+            }
+            .items-grid {
+                grid-template-columns: 1fr; /* Stack columns on small screens */
+            }
+            .item-content {
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">Creative Spark</div>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search for ideas, tools, or inspiration...">
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>Ignite Your Next Big Idea</h1>
+                <p>Explore a curated selection of resources and tools designed to streamline your creative process and bring your visions to life.</p>
+                <a href="#item-showcase" class="cta-button-hero">Start Creating</a>
+            </div>
+        </section>
+
+        <section id="item-showcase" class="container items-grid">
+            </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Creative Spark. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const itemsGrid = document.getElementById('item-showcase');
+            const searchInput = document.getElementById('searchInput');
+
+            // --- Simulate Backend Data ---
+            // In a real application, you'd fetch this from a server API.
+            const allItemsData = [
+                {
+                    imageUrl: "https://via.placeholder.com/300x200/4CAF50/FFFFFF?text=Web+Design+Kit",
+                    name: "Web Design Kit",
+                    description: "A comprehensive collection of UI/UX templates, modern icons, and responsive frameworks for crafting stunning websites.",
+                    pageLink: "https://www.example.com/web-design-kit",
+                    buttonLink: "https://www.example.com/web-design-kit-create",
+                    buttonHoverDescription: "Dive into web design with our ready-made assets."
+                },
+                {
+                    imageUrl: "https://via.placeholder.com/300x200/2196F3/FFFFFF?text=Branding+Guide",
+                    name: "Brand Identity Guide",
+                    description: "Essential resources for developing a strong and cohesive brand identity, including logo guidelines and color palettes.",
+                    pageLink: "https://www.example.com/branding-guide",
+                    buttonLink: "https://www.example.com/branding-guide-create",
+                    buttonHoverDescription: "Build a memorable brand that stands out."
+                },
+                {
+                    imageUrl: "https://via.placeholder.com/300x200/FFC107/FFFFFF?text=Content+Planner",
+                    name: "Content Strategy Planner",
+                    description: "Organize your content marketing efforts with a structured planner, engaging templates, and innovative topic ideas.",
+                    pageLink: "https://www.example.com/content-planner",
+                    buttonLink: "https://www.example.com/content-planner-create",
+                    buttonHoverDescription: "Efficiently plan and execute your content."
+                },
+                {
+                    imageUrl: "https://via.placeholder.com/300x200/F44336/FFFFFF?text=SEO+Checklist",
+                    name: "SEO Optimization Checklist",
+                    description: "A simple, step-by-step guide to optimize your website for search engines and significantly improve online visibility.",
+                    pageLink: "https://www.example.com/seo-checklist",
+                    buttonLink: "https://www.example.com/seo-checklist-create",
+                    buttonHoverDescription: "Boost your search engine rankings today!"
+                },
+                {
+                    imageUrl: "https://via.placeholder.com/300x200/9C27B0/FFFFFF?text=Social+Media+Templates",
+                    name: "Social Media Templates",
+                    description: "Ready-to-use templates for various social media platforms, designed to maximize engagement and reach effectively.",
+                    pageLink: "https://www.example.com/social-media-templates",
+                    buttonLink: "https://www.example.com/social-media-templates-create",
+                    buttonHoverDescription: "Design captivating social media posts instantly."
+                },
+                {
+                    imageUrl: "https://via.placeholder.com/300x200/00BCD4/FFFFFF?text=Prototyping+Guide",
+                    name: "Interactive Prototyping Guide",
+                    description: "Learn to build interactive prototypes for web and mobile apps, enhancing user testing and feedback loops seamlessly.",
+                    pageLink: "https://www.example.com/prototyping-guide",
+                    buttonLink: "https://www.example.com/prototyping-guide-create",
+                    buttonHoverDescription: "Bring your app ideas to life with dynamic prototypes."
+                }
+            ];
+
+            // --- Function to Render Items ---
+            function renderItems(itemsToDisplay) {
+                itemsGrid.innerHTML = ''; // Clear current items
+
+                if (itemsToDisplay.length === 0) {
+                    itemsGrid.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: #555;">No items found matching your search.</p>`;
+                    return;
+                }
+
+                itemsToDisplay.forEach(item => {
+                    const itemCard = document.createElement('div');
+                    itemCard.classList.add('item-card');
+
+                    itemCard.innerHTML = `
+                        <a href="${item.pageLink}" target="_blank">
+                            <img src="${item.imageUrl}" alt="${item.name}">
+                        </a>
+                        <div class="item-content">
+                            <h3 class="item-name">${item.name}
+                                <p class="item-description">${item.description}</p>
+                            </h3>
+                            <div class="create-button-wrapper">
+                                <a href="${item.buttonLink}" target="_blank" class="create-button">
+                                    Create Now
+                                    <span class="button-hover-description">${item.buttonHoverDescription}</span>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    itemsGrid.appendChild(itemCard);
+                });
+            }
+
+            // --- Search Functionality ---
+            // Uses a debounce to avoid too many updates while typing
+            let searchTimeout;
+            searchInput.addEventListener('input', (event) => {
+                clearTimeout(searchTimeout); // Clear previous timeout
+                searchTimeout = setTimeout(() => {
+                    const query = event.target.value.toLowerCase().trim();
+                    const filteredItems = allItemsData.filter(item =>
+                        item.name.toLowerCase().includes(query) ||
+                        item.description.toLowerCase().includes(query)
+                    );
+                    renderItems(filteredItems);
+                }, 300); // Wait 300ms after last input to filter
+            });
+
+            // --- Initial Page Load ---
+            renderItems(allItemsData); // Display all items when the page first loads
+        });
+    </script>
+</body>
+</html>
