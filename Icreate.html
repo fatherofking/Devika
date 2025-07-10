@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Awesome Showcase</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* General Body Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6; /* Light background for contrast */
+            color: #333;
+            line-height: 1.6;
+            scroll-behavior: smooth; /* Smooth scrolling for internal links */
+        }
+
+        /* Container for overall content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: #ffffff;
+            padding: 20px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        nav ul li {
+            margin-left: 30px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 400;
+            transition: color 0.3s ease;
+        }
+
+        nav ul li a:hover {
+            color: #007bff; /* Primary brand color for hover */
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #007bff, #0056b3); /* Gradient background */
+            color: #fff;
+            text-align: center;
+            padding: 100px 20px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+        }
+
+        .hero h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .hero p {
+            font-size: 1.2em;
+            max-width: 700px;
+            margin: 0 auto 30px auto;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: #fff;
+            color: #007bff;
+            padding: 12px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .cta-button:hover {
+            background-color: #e2e6ea;
+            color: #0056b3;
+        }
+
+        /* Sections and Grid */
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+            gap: 30px; /* Space between items */
+            padding: 20px;
+        }
+
+        .section-item {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden; /* Ensures image corners are rounded */
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .section-item:hover {
+            transform: translateY(-5px); /* Subtle lift on hover */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .section-item a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .section-item img {
+            width: 100%;
+            height: 200px; /* Fixed height for consistent layout */
+            object-fit: cover; /* Ensures images cover the area without distortion */
+            display: block;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        .section-name {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            position: relative; /* Needed for description positioning */
+            cursor: pointer;
+            padding-bottom: 25px; /* Space for description */
+        }
+
+        .section-description {
+            font-size: 0.95em;
+            color: #666;
+            opacity: 0; /* Hidden by default */
+            max-height: 0; /* Hidden by default */
+            overflow: hidden;
+            transition: opacity 0.4s ease-out, max-height 0.4s ease-out;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(255, 255, 255, 0.95); /* Slightly transparent background */
+            padding: 10px 15px;
+            border-radius: 0 0 8px 8px; /* Match item border-radius */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transform: translateY(100%); /* Start off-screen */
+        }
+
+        /* Hover effect for description */
+        .section-name:hover .section-description {
+            opacity: 1;
+            max-height: 100px; /* Adjust as needed for content */
+            transform: translateY(0); /* Slide into view */
+            position: static; /* Allows it to flow naturally in the document */
+        }
+        /* Important: When .section-name is hovered, we want the description to appear directly below it.
+           We'll achieve this by making .section-description a child of .section-name and controlling its visibility.
+           The 'position: absolute' was causing issues, so let's adjust. */
+        .section-name {
+            position: relative; /* Parent for the absolute description */
+            padding-bottom: 0; /* No need for extra padding here */
+        }
+
+        .section-description {
+            opacity: 0;
+            visibility: hidden; /* Hide completely */
+            max-height: 0;
+            overflow: hidden;
+            transition: opacity 0.3s ease-in-out, max-height 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            padding: 0 15px; /* Initial padding, adjusts on hover */
+            text-align: left;
+        }
+
+        .section-name:hover .section-description {
+            opacity: 1;
+            visibility: visible;
+            max-height: 200px; /* Allow enough height for content */
+            padding: 10px 15px; /* Add padding when visible */
+        }
+
+
+        /* Footer Styles */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            background-color: #2c3e50;
+            color: #f4f7f6;
+            margin-top: 50px;
+        }
+
+        footer p {
+            margin: 0;
+            font-size: 0.9em;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+            }
+
+            nav ul {
+                margin-top: 15px;
+            }
+
+            nav ul li {
+                margin: 0 15px;
+            }
+
+            .hero h1 {
+                font-size: 2.2em;
+            }
+
+            .hero p {
+                font-size: 1em;
+            }
+
+            .sections-grid {
+                grid-template-columns: 1fr; /* Stack columns on small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">My Showcase</div>
+            <ul>
+                <li><a href="#section1">Section One</a></li>
+                <li><a href="#section2">Section Two</a></li>
+                <li><a href="#section3">Section Three</a></li>
+                <li><a href="#section4">Section Four</a></li>
+                <li><a href="#section5">Section Five</a></li>
+                <li><a href="#section6">Section Six</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>Welcome to Our Creative Space</h1>
+                <p>Discover unique projects and stunning visuals designed with passion and precision. Explore our six distinct areas below.</p>
+                <a href="#sections-overview" class="cta-button">Explore Sections</a>
+            </div>
+        </section>
+
+        <section id="sections-overview" class="container sections-grid">
+            <div class="section-item" id="section1">
+                <a href="#">
+                    <img src="https://via.placeholder.com/300x200?text=Project+Alpha" alt="Project Alpha">
+                    <div class="section-content">
+                        <h3 class="section-name">Project Alpha
+                            <span class="section-description">This project focuses on innovative web solutions and user experience design, pushing the boundaries of digital interaction.</span>
+                        </h3>
+                    </div>
+                </a>
+            </div>
+
+            <div class="section-item" id="section2">
+                <a href="#">
+                    <img src="https://via.placeholder.com/300x200?text=Design+Beta" alt="Design Beta">
+                    <div class="section-content">
+                        <h3 class="section-name">Design Beta
+                            <span class="section-description">A collection of graphic design works, emphasizing modern aesthetics and impactful visual communication.</span>
+                        </h3>
+                    </div>
+                </a>
+            </div>
+
+            <div class="section-item" id="section3">
+                <a href="#">
+                    <img src="https://via.placeholder.com/300x200?text=Development+Gamma" alt="Development Gamma">
+                    <div class="section-content">
+                        <h3 class="section-name">Development Gamma
+                            <span class="section-description">Showcasing robust backend development and scalable architecture for high-performance applications.</span>
+                        </h3>
+                    </div>
+                </a>
+            </div>
+
+            <div class="section-item" id="section4">
+                <a href="#">
+                    <img src="https://via.placeholder.com/300x200?text=Strategy+Delta" alt="Strategy Delta">
+                    <div class="section-content">
+                        <h3 class="section-name">Strategy Delta
+                            <span class="section-description">Our approach to digital marketing and content strategy, driving engagement and measurable results.</span>
+                        </h3>
+                    </div>
+                </a>
+            </div>
+
+            <div class="section-item" id="section5">
+                <a href="#">
+                    <img src="https://via.placeholder.com/300x200?text=Branding+Epsilon" alt="Branding Epsilon">
+                    <div class="section-content">
+                        <h3 class="section-name">Branding Epsilon
+                            <span class="section-description">Crafting compelling brand identities and visual systems that resonate with target audiences.</span>
+                        </h3>
+                    </div>
+                </a>
+            </div>
+
+            <div class="section-item" id="section6">
+                <a href="#">
+                    <img src="https://via.placeholder.com/300x200?text=Innovation+Zeta" alt="Innovation Zeta">
+                    <div class="section-content">
+                        <h3 class="section-name">Innovation Zeta
+                            <span class="section-description">Exploring cutting-edge technologies and experimental designs to shape future digital experiences.</span>
+                        </h3>
+                    </div>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 My Awesome Showcase. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
