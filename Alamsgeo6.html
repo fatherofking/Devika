@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secure Drag & Drop Zones</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #eef1f5;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      position: relative;
+      color: #2c3e50;
+      margin-bottom: 40px;
+    }
+
+    /* Style for the Songs button */
+    #songsButton {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      padding: 10px 20px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #songsButton:hover {
+      background-color: #2980b9;
+    }
+
+    /* General Overlay Styles */
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+
+    .overlay-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 85%;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      position: relative;
+      transform: translateY(0);
+      transition: transform 0.3s ease-out;
+    }
+
+    .overlay.show .overlay-content {
+      transform: translateY(0);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 25px;
+      font-size: 28px;
+      cursor: pointer;
+      color: #555;
+      transition: color 0.2s ease;
+    }
+
+    .close-btn:hover {
+      color: #e74c3c;
+    }
+
+    /* Songs Overlay Specific Styles */
+    #songsOverlay .overlay-content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #songsOverlay h2 {
+      text-align: center;
+      color: #34495e;
+      margin-bottom: 15px;
+      font-size: 1.8em;
+    }
+
+    #songsSearch {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1em;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .song-list-container {
+      flex-grow: 1;
+      overflow-y: auto;
+      max-height: 300px; /* Limit height for initial list */
+      padding-right: 10px; /* For scrollbar */
+    }
+
+    .song-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+      transition: background-color 0.2s ease;
+    }
+
+    .song-item:last-child {
+      border-bottom: none;
+    }
+
+    .song-item:hover {
+      background-color: #f8f8f8;
+    }
+
+    .song-item span {
+      flex-grow: 1;
+      font-size: 1.1em;
+      color: #444;
+    }
+
+    .song-item button {
+      padding: 8px 15px;
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95em;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+
+    .song-item button:hover {
+      background-color: #27ae60;
+      transform: translateY(-1px);
+    }
+
+    /* NEW: Styles for the persistent audio player */
+    #persistentAudioPlayer {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      padding: 15px 20px;
+      margin: 20px auto 30px auto;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid #e0e0e0;
+    }
+
+    #persistentAudioPlayer #nowPlayingText {
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 0;
+    }
+
+    #persistentAudioPlayer #audioPlayer {
+      width: 100%;
+      max-width: 450px;
+      margin: 0; /* Override previous margin */
+      display: block;
+    }
+
+    /* NEW: Loop Toggle Button Style (moved here) */
+    #loopToggleButton {
+      padding: 8px 15px;
+      background-color: #556270; /* Darker grey */
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95em;
+      transition: background-color 0.3s ease;
+      margin-top: 5px; /* Add a little space above it */
+    }
+
+    #loopToggleButton:hover {
+      background-color: #434c55;
+    }
+
+
+    .vibe-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 15px;
+      padding-top: 15px;
+      border-top: 1px dashed #ddd;
+    }
+
+    .vibe-section p {
+      margin: 0;
+      font-size: 1.1em;
+      color: #666;
+    }
+
+    .vibe-section button {
+      padding: 10px 20px;
+      background-color: #f39c12;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+
+    .vibe-section button:hover {
+      background-color: #e67e22;
+      transform: translateY(-1px);
+    }
+
+    /* PDF Text Overlay Styles */
+    #pdfTextOverlay .overlay-content {
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #pdfTextOverlay h3 {
+      text-align: center;
+      color: #34495e;
+      margin-bottom: 10px;
+      font-size: 1.6em;
+    }
+
+    #pdfContentDisplay {
+      white-space: pre-wrap; /* Preserves formatting of text, like a PDF */
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      padding: 15px;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      line-height: 1.6;
+      font-size: 1em;
+      color: #444;
+    }
+
+    #copyTextBtn {
+      padding: 12px 25px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1em;
+      align-self: center; /* Center the button */
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0, 123, 255, 0.2);
+    }
+
+    #copyTextBtn:hover {
+      background-color: #0056b3;
+    }
+
+    .controls {
+      display: none;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 550px;
+      margin: 0 auto 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .controls input[type="file"],
+    .controls textarea,
+    .controls button {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1em;
+    }
+
+    .controls button {
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .controls button:hover {
+      background-color: #218838;
+    }
+
+    /* Container for drop-zone and its button */
+    .drop-zone-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      padding-bottom: 20px;
+    }
+
+    .drop-zones {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+      padding: 10px;
+    }
+
+    .drop-zone {
+      border: 2px dashed #b0c4de;
+      border-radius: 12px;
+      background: white;
+      padding: 20px;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .drop-zone.over {
+      background-color: #e0f2f7;
+      border-color: #7abfe7;
+    }
+
+    .drop-zone strong {
+      color: #34495e;
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+
+    .content-block {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fdfdfd;
+      cursor: grab;
+      transition: transform 0.1s ease-out, box-shadow 0.2s ease;
+    }
+
+    .content-block:active {
+      cursor: grabbing;
+    }
+
+    .content-block:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+
+    img, video {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 6px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    a.pdf-link {
+      display: block;
+      color: #007acc;
+      text-decoration: underline;
+      word-break: break-word;
+      font-size: 0.95em;
+    }
+
+    /* "Display Text" button style */
+    .display-text-btn {
+      margin-top: auto;
+      padding: 10px 15px;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95em;
+      transition: background-color 0.3s ease;
+      align-self: center;
+      width: calc(100% - 40px);
+      max-width: 200px;
+    }
+
+    .display-text-btn:hover {
+      background-color: #5a6268;
+    }
+
+    #adminLogin {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #adminLogin input[type="password"] {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1em;
+      margin-right: 10px;
+      width: calc(100% - 100px);
+    }
+
+    #adminLogin button {
+      padding: 10px 20px;
+      background-color: #17a2b8;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background-color 0.3s ease;
+    }
+
+    #adminLogin button:hover {
+      background-color: #138496;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.8em;
+      }
+      #songsButton {
+        position: static;
+        margin-top: 15px;
+        width: 100%;
+      }
+      .overlay-content {
+        max-width: 95%;
+        padding: 20px;
+      }
+      .drop-zones {
+        grid-template-columns: 1fr;
+      }
+      .controls, #adminLogin {
+        margin-left: 10px;
+        margin-right: 10px;
+      }
+      /* Adjustments for the new container on small screens */
+      .drop-zone-container {
+        padding: 0;
+        box-shadow: none;
+      }
+      .drop-zone {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        margin-bottom: -1px;
+      }
+      .display-text-btn {
+        width: calc(100% - 20px);
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        margin-top: 0;
+        padding-top: 15px;
+        padding-bottom: 15px;
+        border-radius: 0 0 12px 12px;
+        background-color: #7f8c8d;
+      }
+      .display-text-btn:hover {
+        background-color: #6c757d;
+      }
+      #persistentAudioPlayer {
+        margin-left: 10px;
+        margin-right: 10px;
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>
+    Project Webpage
+    <button id="songsButton">Songs</button>
+  </h1>
+
+  <div id="persistentAudioPlayer">
+    <p id="nowPlayingText">No song playing.</p>
+    <audio id="audioPlayer" controls></audio>
+    <button id="loopToggleButton">Loop: OFF</button>
+  </div>
+  <div id="adminLogin">
+    <input type="password" id="adminPassword" placeholder="Enter admin password..." />
+    <button onclick="checkPassword()">Login</button>
+  </div>
+
+  <div class="controls" id="editorControls">
+    <input type="file" id="fileInput" accept="image/*,video/*,application/pdf" />
+    <textarea id="textInput" placeholder="Enter text to add..."></textarea>
+    <button id="addTextBtn">Add Text</button>
+  </div>
+
+  <div class="drop-zones">
+    <div class="drop-zone-container">
+      <div class="drop-zone" id="zone1">
+        <strong>Zone 1</strong>
+      </div>
+      <button class="display-text-btn" data-zone="1">Display Info</button>
+    </div>
+
+    <div class="drop-zone-container">
+      <div class="drop-zone" id="zone2">
+        <strong>Zone 2</strong>
+      </div>
+      <button class="display-text-btn" data-zone="2">Display Info</button>
+    </div>
+
+    <div class="drop-zone-container">
+      <div class="drop-zone" id="zone3">
+        <strong>Zone 3</strong>
+      </div>
+      <button class="display-text-btn" data-zone="3">Display Info</button>
+    </div>
+
+    <div class="drop-zone-container">
+      <div class="drop-zone" id="zone4">
+        <strong>Zone 4</strong>
+      </div>
+      <button class="display-text-btn" data-zone="4">Display Info</button>
+    </div>
+  </div>
+
+  <div id="songsOverlay" class="overlay">
+    <div class="overlay-content">
+      <span class="close-btn" onclick="closeSongsOverlay()">&times;</span>
+      <h2>My Selected Songs & Motivation Talks</h2>
+      <input type="text" id="songsSearch" placeholder="Search for a song..." style="display:none;">
+      <div id="songsList" class="song-list-container">
+        </div>
+      <div class="vibe-section" id="vibeSection">
+        <p>Not your vibe? Click here</p>
+        <button id="millionSongsBtn">Explore More</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pdfTextOverlay" class="overlay">
+    <div class="overlay-content">
+      <span class="close-btn" onclick="closePdfTextOverlay()">&times;</span>
+      <h3>Zone Information</h3>
+      <div id="pdfContentDisplay">
+        </div>
+      <button id="copyTextBtn">Copy to Clipboard</button>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const textInput = document.getElementById("textInput");
+    const addTextBtn = document.getElementById("addTextBtn");
+    const zones = document.querySelectorAll(".drop-zone");
+    const editorControls = document.getElementById("editorControls");
+    const songsButton = document.getElementById("songsButton");
+    const songsOverlay = document.getElementById("songsOverlay");
+    const songsList = document.getElementById("songsList");
+    const audioPlayer = document.getElementById("audioPlayer");
+    const nowPlayingText = document.getElementById("nowPlayingText");
+    const millionSongsBtn = document.getElementById("millionSongsBtn");
+    const songsSearch = document.getElementById("songsSearch");
+    const loopToggleButton = document.getElementById("loopToggleButton");
+
+    const pdfTextOverlay = document.getElementById("pdfTextOverlay");
+    const pdfContentDisplay = document.getElementById("pdfContentDisplay");
+    const copyTextBtn = document.getElementById("copyTextBtn");
+    const displayTextButtons = document.querySelectorAll(".display-text-btn");
+
+    let uniqueId = 0;
+
+    // Dummy data for songs and motivation talks
+    const audioCollection = [
+      { name: "Upbeat Motivational Song", type: "song", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+      { name: "Relaxing Acoustic Tune", type: "song", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+      { name: "Morning Meditation Guide", type: "motivation", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+      { name: "Focus & Productivity Talk", type: "motivation", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+      { name: "Inspirational Speech", type: "motivation", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+      // Add more for the initial list
+      { name: "Energetic Pop", type: "song", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
+      { name: "Calm Piano Melody", type: "song", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+    ];
+
+    // Dummy data for a "million songs" (simulated for demonstration)
+    const largeAudioCollection = [];
+    for (let i = 0; i < 500; i++) {
+      largeAudioCollection.push({
+        name: `Discovery Track ${i + 1}`,
+        type: (i % 3 === 0) ? "motivation" : "song",
+        src: `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${(i % 10) + 1}.mp3`
+      });
+    }
+
+    // --- START: MODIFIED zoneTexts with Large Content for Zone 1 ---
+    const zoneTexts = {
+      1: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+Proin vel ipsum id mauris efficitur finibus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec ac magna at dolor dictum vulputate. Integer at odio eu ipsum sollicitudin eleifend. Sed eu ipsum ut leo aliquam varius. Vivamus dictum odio non tellus efficitur, at consectetur turpis convallis. Nullam quis dui vel magna lacinia pellentesque. Nam non dui eget nunc tincidunt dignissim. Quisque vel ipsum quis turpis convallis lacinia.
+
+Fusce euismod enim non neque iaculis, ac vestibulum leo tempor. Aenean efficitur, nulla vel ultricies ultrices, leo ex bibendum justo, eu ultricies ex urna vel turpis. Sed sit amet mi nec eros luctus ullamcorper. Etiam in dolor id libero feugiat hendrerit. Donec consectetur, odio ut varius facilisis, odio libero fermentum elit, vel feugiat nunc elit in libero. Aliquam erat volutpat. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.
+
+[... REPEAT THIS PARAGRAPH BLOCK APPROXIMATELY 2500 TIMES TO EXCEED 100,000 WORDS ...]
+
+This text is intentionally very long to demonstrate the scrolling capability of the "Display Info" overlay. You should be able to scroll through all of this content with ease.
+`,
+      2: `Zone 2 is specifically designed for collaborative projects.
+It allows multiple users to contribute and manage content simultaneously.
+
+Features:
+- Real-time content synchronization
+- Version control system
+- User role management (Admin, Editor, Viewer)
+- Integrated communication tools
+
+Please ensure all uploaded content complies with project standards.`,
+      3: `Welcome to Zone 3, your personal archive.
+This zone is optimized for long-term storage and retrieval of personal files.
+
+Storage details:
+- Unlimited cloud storage
+- Encrypted data transfer
+- Automated backup system
+- Easy access from any device
+
+We recommend organizing your files with clear naming conventions for efficient retrieval.`,
+      4: `Zone 4 serves as a temporary staging area for pre-production assets.
+Content here is subject to frequent changes and reviews before final deployment.
+
+Important notes:
+- Data in this zone is purged every 7 days.
+- Only authorized personnel can upload content.
+- All content undergoes a preliminary review before being moved to other zones.
+
+Use this zone for rapid prototyping and initial testing.`
+    };
+    // --- END: MODIFIED zoneTexts with Large Content for Zone 1 ---
+
+
+    // Helper function to create a very long string (for testing purposes)
+    // You would copy the output of this function into zoneTexts[1]
+    function generateLongText(wordCount) {
+        const loremParagraph = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Proin vel ipsum id mauris efficitur finibus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec ac magna at dolor dictum vulputate. Integer at odio eu ipsum sollicitudin eleifend. Sed eu ipsum ut leo aliquam varius. Vivamus dictum odio non tellus efficitur, at consectetur turpis convallis. Nullam quis dui vel magna lacinia pellentesque. Nam non dui eget nunc tincidunt dignissim. Quisque vel ipsum quis turpis convallis lacinia.
+Fusce euismod enim non neque iaculis, ac vestibulum leo tempor. Aenean efficitur, nulla vel ultricies ultrices, leo ex bibendum justo, eu ultricies ex urna vel turpis. Sed sit amet mi nec eros luctus ullamcorper. Etiam in dolor id libero feugiat hendrerit. Donec consectetur, odio ut varius facilisis, odio libero fermentum elit, vel feugiat nunc elit in libero. Aliquam erat volutpat. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.\n\n`; // Approx 150 words per paragraph block
+
+        let text = "";
+        let currentWordCount = 0;
+        while (currentWordCount < wordCount) {
+            text += loremParagraph;
+            currentWordCount += 150; // Add words based on paragraph length
+        }
+        return text + `\n\nThis text is intentionally very long to demonstrate the scrolling capability of the "Display Info" overlay. You should be able to scroll through all of this content with ease. (Total words: approx ${currentWordCount + 20})`;
+    }
+
+    // To use the generator, uncomment the line below and copy the output to zoneTexts[1]
+    // console.log(generateLongText(100000));
+
+
+    function makeDraggable(el) {
+      el.draggable = true;
+      el.classList.add("content-block");
+      el.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", el.id);
+        e.dataTransfer.effectAllowed = "move";
+      });
+    }
+
+    function handleDropZone(zone) {
+      zone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        zone.classList.add("over");
+        e.dataTransfer.dropEffect = "move";
+      });
+
+      zone.addEventListener("dragleave", () => {
+        zone.classList.remove("over");
+      });
+
+      zone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        zone.classList.remove("over");
+        const id = e.dataTransfer.getData("text/plain");
+        const element = document.getElementById(id);
+        if (element && !zone.contains(element)) {
+          zone.appendChild(element);
+        }
+      });
+    }
+
+    zones.forEach(zone => handleDropZone(zone));
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const wrapper = document.createElement("div");
+        wrapper.id = "item-" + uniqueId++;
+        makeDraggable(wrapper);
+
+        if (file.type.startsWith("image/")) {
+          const img = document.createElement("img");
+          img.src = event.target.result;
+          img.alt = file.name;
+          wrapper.appendChild(img);
+        } else if (file.type.startsWith("video/")) {
+          const video = document.createElement("video");
+          video.src = event.target.result;
+          video.controls = true;
+          video.muted = true;
+          wrapper.appendChild(video);
+        } else if (file.type === "application/pdf") {
+          const link = document.createElement("a");
+          link.href = event.target.result;
+          link.textContent = file.name;
+          link.target = "_blank";
+          link.className = "pdf-link";
+          link.title = `View ${file.name}`;
+          wrapper.appendChild(link);
+        }
+
+        document.getElementById("zone1").appendChild(wrapper);
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    addTextBtn.addEventListener("click", () => {
+      const text = textInput.value.trim();
+      if (text === "") return;
+
+      const wrapper = document.createElement("div");
+      wrapper.id = "item-" + uniqueId++;
+      makeDraggable(wrapper);
+      wrapper.textContent = text;
+      document.getElementById("zone1").appendChild(wrapper);
+      textInput.value = "";
+    });
+
+    function checkPassword() {
+      const password = document.getElementById("adminPassword").value;
+      const correctPassword = "yourpassword";
+      if (password === correctPassword) {
+        editorControls.style.display = "flex";
+        document.getElementById("adminLogin").style.display = "none";
+      } else {
+        alert("Incorrect password. Please try again.");
+      }
+    }
+
+    // --- Songs Feature Functions ---
+
+    songsButton.addEventListener("click", () => {
+      songsOverlay.classList.add("show");
+      songsOverlay.style.display = "flex";
+      loadSongsList(audioCollection);
+      songsSearch.style.display = 'none';
+      loopToggleButton.textContent = audioPlayer.loop ? "Loop: ON" : "Loop: OFF";
+    });
+
+    function closeSongsOverlay() {
+      songsOverlay.classList.remove("show");
+      songsOverlay.style.display = "none";
+    }
+
+    function loadSongsList(collection, filter = '') {
+      songsList.innerHTML = "";
+      const filteredCollection = collection.filter(item =>
+        item.name.toLowerCase().includes(filter.toLowerCase())
+      );
+
+      if (filteredCollection.length === 0) {
+        songsList.innerHTML = '<p style="text-align: center; color: #666;">No songs found matching your search.</p>';
+        return;
+      }
+
+      filteredCollection.forEach((item, index) => {
+        const songItem = document.createElement("div");
+        songItem.classList.add("song-item");
+        const globalIndex = collection.indexOf(item);
+        songItem.innerHTML = `
+          <span>${item.name} <span style="opacity: 0.7; font-size: 0.9em;">(${item.type})</span></span>
+          <button onclick="playAudio(${globalIndex}, ${collection === largeAudioCollection})">Play</button>
+        `;
+        songsList.appendChild(songItem);
+      });
+    }
+
+    function playAudio(index, fromLargeCollection = false) {
+      const currentCollection = fromLargeCollection ? largeAudioCollection : audioCollection;
+      const selectedAudio = currentCollection[index];
+      if (selectedAudio) {
+        audioPlayer.src = selectedAudio.src;
+        audioPlayer.play();
+        nowPlayingText.textContent = `Now playing: ${selectedAudio.name}`;
+        loopToggleButton.textContent = audioPlayer.loop ? "Loop: ON" : "Loop: OFF";
+      }
+    }
+
+    millionSongsBtn.addEventListener("click", () => {
+      songsList.style.maxHeight = 'unset';
+      loadSongsList(largeAudioCollection);
+      songsSearch.style.display = 'block';
+      songsSearch.value = '';
+      songsSearch.focus();
+      document.getElementById("vibeSection").style.display = 'none';
+    });
+
+    songsSearch.addEventListener('input', () => {
+      const currentCollection = document.getElementById("vibeSection").style.display === 'none' ? largeAudioCollection : audioCollection;
+      loadSongsList(currentCollection, songsSearch.value);
+    });
+
+    loopToggleButton.addEventListener('click', () => {
+        audioPlayer.loop = !audioPlayer.loop;
+        loopToggleButton.textContent = audioPlayer.loop ? "Loop: ON" : "Loop: OFF";
+    });
+
+
+    // --- PDF-like Text Display Functions ---
+
+    displayTextButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        const zoneId = e.target.dataset.zone;
+        const textContent = zoneTexts[zoneId];
+        if (textContent) {
+          pdfContentDisplay.textContent = textContent;
+          pdfTextOverlay.classList.add("show");
+          pdfTextOverlay.style.display = "flex";
+        } else {
+          alert("No information available for this zone yet.");
+        }
+      });
+    });
+
+    function closePdfTextOverlay() {
+      pdfTextOverlay.classList.remove("show");
+      pdfTextOverlay.style.display = "none";
+      pdfContentDisplay.textContent = "";
+    }
+
+    copyTextBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(pdfContentDisplay.textContent);
+        alert('Content copied to clipboard!');
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+        alert('Failed to copy text. Please copy manually.');
+      }
+    });
+
+  </script>
+
+</body>
+</html>
